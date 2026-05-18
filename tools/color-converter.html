@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Color Converter — HEX RGB HSL | DevTools Kit</title>
+  <meta name="description" content="Convert colors between HEX, RGB, HSL, and HSV instantly. Live color preview, color picker, palette generator. Free online color tool." />
+  <meta name="keywords" content="color converter, hex to rgb, rgb to hex, hsl converter, color picker online, hex color tool" />
+  <link rel="canonical" href="https://devtoolskit.com/tools/color-converter.html" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2300e5a0'/><text x='6' y='23' font-size='20' font-family='monospace' fill='%230a0a0f'>⚙</text></svg>" />
+  <style>
+    .color-preview { width:100%; height:120px; border-radius:var(--radius); transition:background .2s; border:1px solid var(--border); margin-bottom:16px; }
+    .color-input-row { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+    .color-input-label { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim); width:40px; flex-shrink:0; }
+    .color-value-box {
+      flex:1; background:var(--bg3); border:1px solid var(--border);
+      border-radius:var(--radius); padding:9px 12px;
+      font-family:var(--font-mono); font-size:14px; color:var(--text);
+      cursor:pointer; transition:border .15s; display:flex; align-items:center; justify-content:space-between;
+    }
+    .color-value-box:hover { border-color:var(--accent); }
+    .copy-dot { font-size:11px; color:var(--text-faint); }
+    .picker-wrap { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+    input[type=color] { width:56px; height:40px; border:none; border-radius:var(--radius); cursor:pointer; background:none; padding:0; }
+    .picker-label { font-size:13px; color:var(--text-dim); }
+    .slider-row { margin-bottom:12px; }
+    .slider-row label { font-size:12px; color:var(--text-dim); margin-bottom:4px; display:flex; justify-content:space-between; }
+    input[type=range] { width:100%; accent-color:var(--accent); }
+    .palette-grid { display:grid; grid-template-columns:repeat(10,1fr); gap:6px; margin-top:12px; }
+    .swatch { height:36px; border-radius:6px; cursor:pointer; border:1px solid transparent; transition:transform .15s; }
+    .swatch:hover { transform:scale(1.15); border-color:var(--text-dim); }
+    .named-input { background:var(--bg3); border:1px solid var(--border); color:var(--text); font-family:var(--font-mono); font-size:13px; padding:9px 12px; border-radius:var(--radius); outline:none; flex:1; }
+    .named-input:focus { border-color:var(--accent); }
+    .contrast-chip { display:inline-block; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:700; margin-right:8px; margin-top:8px; }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="/"><span>DevTools</span>Kit<span class="logo-badge">FREE</span></a>
+    <div class="nav-links">
+      <a href="/blog/" class="hide-mobile">Blog</a>
+      <a href="/#tools" class="hide-mobile">All Tools</a>
+      <a href="/#pricing" class="btn-upgrade">✦ Go Pro</a>
+    </div>
+  </div>
+</nav>
+
+<div class="tool-page">
+  <div class="container">
+    <div class="breadcrumb"><a href="/">Home</a><span>›</span><a href="/#tools">Tools</a><span>›</span>Color Converter</div>
+    <div class="tool-page-header">
+      <h1 class="tool-page-title">◈ Color Converter</h1>
+      <p class="tool-page-subtitle">Convert between HEX, RGB, HSL and HSV. Live preview, color picker, tints & shades palette.</p>
+    </div>
+
+    <div class="tool-workspace">
+      <div class="tool-main">
+
+        <!-- Picker + Preview -->
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Color Picker</span></div>
+          <div class="panel-body">
+            <div id="color-preview" class="color-preview" style="background:#00e5a0"></div>
+            <div class="picker-wrap">
+              <input type="color" id="native-picker" value="#00e5a0" oninput="fromHex(this.value)" />
+              <span class="picker-label">Click to pick a color, or enter values below</span>
+            </div>
+            <!-- Named / HEX input -->
+            <div style="display:flex;gap:8px;margin-bottom:16px">
+              <input class="named-input" id="hex-input" placeholder="#00e5a0" oninput="fromHexInput(this.value)" maxlength="9" />
+              <button class="panel-btn" onclick="fromHex(document.getElementById('hex-input').value)">Apply</button>
+            </div>
+            <!-- RGB sliders -->
+            <div class="slider-row">
+              <label>Red <span id="r-val">0</span></label>
+              <input type="range" id="r-slider" min="0" max="255" value="0" oninput="fromSliders()" style="accent-color:#ff6b6b" />
+            </div>
+            <div class="slider-row">
+              <label>Green <span id="g-val">229</span></label>
+              <input type="range" id="g-slider" min="0" max="255" value="229" oninput="fromSliders()" style="accent-color:#00e5a0" />
+            </div>
+            <div class="slider-row">
+              <label>Blue <span id="b-val">160</span></label>
+              <input type="range" id="b-slider" min="0" max="255" value="160" oninput="fromSliders()" style="accent-color:#7c6aff" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Output values -->
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Color Values — click any to copy</span></div>
+          <div class="panel-body">
+            <div class="color-input-row"><span class="color-input-label">HEX</span><div class="color-value-box" id="out-hex" onclick="copyVal('out-hex')">#00e5a0<span class="copy-dot">⧉</span></div></div>
+            <div class="color-input-row"><span class="color-input-label">RGB</span><div class="color-value-box" id="out-rgb" onclick="copyVal('out-rgb')">rgb(0, 229, 160)<span class="copy-dot">⧉</span></div></div>
+            <div class="color-input-row"><span class="color-input-label">HSL</span><div class="color-value-box" id="out-hsl" onclick="copyVal('out-hsl')">hsl(161, 100%, 45%)<span class="copy-dot">⧉</span></div></div>
+            <div class="color-input-row"><span class="color-input-label">HSV</span><div class="color-value-box" id="out-hsv" onclick="copyVal('out-hsv')">hsv(161, 100%, 90%)<span class="copy-dot">⧉</span></div></div>
+            <div class="color-input-row"><span class="color-input-label">CSS</span><div class="color-value-box" id="out-css" onclick="copyVal('out-css')">color: #00e5a0;<span class="copy-dot">⧉</span></div></div>
+            <!-- Contrast -->
+            <div style="margin-top:12px;font-size:12px;color:var(--text-dim)">Text on this color:</div>
+            <div id="contrast-demo" style="margin-top:8px"></div>
+          </div>
+        </div>
+
+        <!-- Palette -->
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Tints & Shades</span></div>
+          <div class="panel-body">
+            <div class="palette-grid" id="palette"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sidebar -->
+      <div class="tool-sidebar">
+        <div class="usage-widget">
+          <div class="usage-title">Daily Usage</div>
+          <div class="usage-count"><span id="usage-count">10</span> <span>/ 10 left</span></div>
+          <div class="usage-bar-bg"><div class="usage-bar-fill" id="usage-bar" style="width:0%"></div></div>
+          <div class="usage-note" id="usage-note">Free plan · resets at midnight.</div>
+          <a href="/#pricing" class="upgrade-cta-small">✦ Upgrade for unlimited →</a>
+        </div>
+        <div class="ad-slot"><div class="ad-slot-label">Advertisement</div><div style="color:var(--text-faint);font-size:12px">AdSense 250×250</div></div>
+        <div class="related-tools">
+          <div class="related-title">Related Tools</div>
+          <a class="related-item" href="/tools/json-formatter.html"><span class="related-icon">{ }</span> JSON Formatter</a>
+          <a class="related-item" href="/tools/base64-encoder.html"><span class="related-icon">64</span> Base64 Encoder</a>
+          <a class="related-item" href="/tools/url-encoder.html"><span class="related-icon">%</span> URL Encoder</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-links"><a href="/">Home</a><a href="/#tools">All Tools</a><a href="/blog/">Blog</a><a href="/#pricing">Pricing</a></div>
+    <div>© 2025 DevTools Kit · All processing happens in your browser.</div>
+  </div>
+</footer>
+<div class="toast" id="dtk-toast"></div>
+<script src="/js/main.js"></script>
+<script>
+const TOOL_ID = 'color-converter';
+DTK.init(TOOL_ID);
+
+/* ---- Conversions ---- */
+function hexToRgb(hex) {
+  hex = hex.replace(/^#/,'');
+  if(hex.length===3) hex=hex.split('').map(c=>c+c).join('');
+  const n=parseInt(hex,16);
+  return {r:(n>>16)&255, g:(n>>8)&255, b:n&255};
+}
+function rgbToHex(r,g,b){ return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join(''); }
+function rgbToHsl(r,g,b){
+  r/=255;g/=255;b/=255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b),l=(max+min)/2;
+  if(max===min) return {h:0,s:0,l:Math.round(l*100)};
+  const d=max-min, s=l>0.5?d/(2-max-min):d/(max+min);
+  let h;
+  if(max===r) h=(g-b)/d+(g<b?6:0);
+  else if(max===g) h=(b-r)/d+2;
+  else h=(r-g)/d+4;
+  return {h:Math.round(h/6*360),s:Math.round(s*100),l:Math.round(l*100)};
+}
+function rgbToHsv(r,g,b){
+  r/=255;g/=255;b/=255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min;
+  const s=max?d/max:0;
+  let h=0;
+  if(d){ if(max===r)h=(g-b)/d%(6); else if(max===g)h=(b-r)/d+2; else h=(r-g)/d+4; h/=6; }
+  return {h:Math.round(h*360),s:Math.round(s*100),v:Math.round(max*100)};
+}
+function luminance(r,g,b){
+  const c=[r,g,b].map(v=>{v/=255;return v<=0.03928?v/12.92:((v+0.055)/1.055)**2.4;});
+  return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2];
+}
+
+function updateAll(r,g,b){
+  const hex=rgbToHex(r,g,b);
+  const hsl=rgbToHsl(r,g,b);
+  const hsv=rgbToHsv(r,g,b);
+
+  document.getElementById('color-preview').style.background=hex;
+  document.getElementById('native-picker').value=hex;
+  document.getElementById('hex-input').value=hex;
+  document.getElementById('r-slider').value=r; document.getElementById('r-val').textContent=r;
+  document.getElementById('g-slider').value=g; document.getElementById('g-val').textContent=g;
+  document.getElementById('b-slider').value=b; document.getElementById('b-val').textContent=b;
+
+  setText('out-hex', hex.toUpperCase());
+  setText('out-rgb', `rgb(${r}, ${g}, ${b})`);
+  setText('out-hsl', `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`);
+  setText('out-hsv', `hsv(${hsv.h}, ${hsv.s}%, ${hsv.v}%)`);
+  setText('out-css', `color: ${hex};`);
+
+  buildContrast(r,g,b,hex);
+  buildPalette(r,g,b);
+}
+
+function setText(id,val){
+  const el=document.getElementById(id);
+  const dot=el.querySelector('.copy-dot');
+  el.childNodes[0].textContent=val;
+}
+
+function fromHex(hex){ if(hex&&/^#?[0-9a-f]{3,6}$/i.test(hex)){ const {r,g,b}=hexToRgb(hex); updateAll(r,g,b); } }
+function fromHexInput(v){ if(/^#?[0-9a-f]{6}$/i.test(v)) fromHex(v); }
+function fromSliders(){
+  const r=parseInt(document.getElementById('r-slider').value);
+  const g=parseInt(document.getElementById('g-slider').value);
+  const b=parseInt(document.getElementById('b-slider').value);
+  updateAll(r,g,b);
+}
+
+function copyVal(id){
+  const el=document.getElementById(id);
+  const text=el.childNodes[0].textContent;
+  DTK.copyText(text);
+}
+
+function buildContrast(r,g,b,hex){
+  const lum=luminance(r,g,b);
+  const whiteCR=(1.05)/(lum+0.05);
+  const blackCR=(lum+0.05)/(0.05);
+  const el=document.getElementById('contrast-demo');
+  el.innerHTML=`
+    <span class="contrast-chip" style="background:${hex};color:#fff">White ${whiteCR.toFixed(1)}:1</span>
+    <span class="contrast-chip" style="background:${hex};color:#000">Black ${blackCR.toFixed(1)}:1</span>`;
+}
+
+function buildPalette(r,g,b){
+  const {h,s}=rgbToHsl(r,g,b);
+  const swatches=[];
+  for(let i=0;i<=9;i++){
+    const l=5+i*9;
+    swatches.push(`hsl(${h},${s}%,${l}%)`);
+  }
+  document.getElementById('palette').innerHTML=swatches.map(c=>`<div class="swatch" style="background:${c}" title="${c}" onclick="applyHSLSwatch(${c.match(/\d+/g).join(',')})"></div>`).join('');
+}
+
+function applyHSLSwatch(h,s,l){
+  // Convert HSL to RGB approximately
+  const hslToRgb=(h,s,l)=>{
+    s/=100;l/=100;
+    const k=n=>(n+h/30)%12;
+    const a=s*Math.min(l,1-l);
+    const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+    return [Math.round(f(0)*255),Math.round(f(8)*255),Math.round(f(4)*255)];
+  };
+  const [r,g,b]=hslToRgb(h,s,l);
+  updateAll(r,g,b);
+}
+
+// Init with default colour
+updateAll(0,229,160);
+</script>
+</body>
+</html>
