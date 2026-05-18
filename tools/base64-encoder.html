@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Base64 Encoder & Decoder — Free Online Tool | DevTools Kit</title>
+  <meta name="description" content="Encode and decode Base64 strings online. Supports plain text, URLs, and file encoding. Fast, private, browser-based Base64 tool." />
+  <meta name="keywords" content="base64 encoder, base64 decoder, encode base64, decode base64 online, base64 converter" />
+  <link rel="canonical" href="https://devtoolskit.com/tools/base64-encoder.html" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2300e5a0'/><text x='6' y='23' font-size='20' font-family='monospace' fill='%230a0a0f'>⚙</text></svg>" />
+  <style>
+    .mode-tabs { display:flex; gap:0; max-width:320px; }
+    .mode-tab { flex:1; padding:10px; text-align:center; background:var(--bg3); border:1px solid var(--border); font-family:var(--font-mono); font-size:12px; cursor:pointer; color:var(--text-dim); transition:all .15s; }
+    .mode-tab:first-child { border-radius:var(--radius) 0 0 var(--radius); }
+    .mode-tab:last-child  { border-radius:0 var(--radius) var(--radius) 0; border-left:none; }
+    .mode-tab.active { background:var(--accent); color:var(--bg); font-weight:700; border-color:var(--accent); }
+    .file-drop {
+      border:2px dashed var(--border); border-radius:var(--radius); padding:32px;
+      text-align:center; cursor:pointer; transition:all .2s;
+    }
+    .file-drop:hover, .file-drop.dragover { border-color:var(--accent); background:rgba(0,229,160,.04); }
+    .file-drop-icon { font-size:32px; margin-bottom:8px; }
+    .file-drop-text { font-size:13px; color:var(--text-dim); }
+    .file-info { font-size:12px; color:var(--accent); margin-top:8px; }
+    .img-preview { max-width:100%; max-height:200px; border-radius:var(--radius); margin-top:12px; display:none; }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="/"><span>DevTools</span>Kit<span class="logo-badge">FREE</span></a>
+    <div class="nav-links">
+      <a href="/blog/" class="hide-mobile">Blog</a>
+      <a href="/#tools" class="hide-mobile">All Tools</a>
+      <a href="/#pricing" class="btn-upgrade">✦ Go Pro</a>
+    </div>
+  </div>
+</nav>
+
+<div class="tool-page">
+  <div class="container">
+    <div class="breadcrumb"><a href="/">Home</a><span>›</span><a href="/#tools">Tools</a><span>›</span>Base64 Encoder</div>
+    <div class="tool-page-header">
+      <h1 class="tool-page-title">64 Base64 Encoder / Decoder</h1>
+      <p class="tool-page-subtitle">Encode text or files to Base64, or decode Base64 strings back to readable content.</p>
+    </div>
+
+    <div class="tool-workspace">
+      <div class="tool-main">
+
+        <!-- Mode toggle -->
+        <div class="mode-tabs">
+          <button class="mode-tab active" id="tab-encode" onclick="setMode('encode')">Encode → Base64</button>
+          <button class="mode-tab" id="tab-decode" onclick="setMode('decode')">Decode ← Base64</button>
+        </div>
+
+        <!-- Options -->
+        <div class="panel">
+          <div class="options-bar">
+            <div class="option-group">
+              <label class="option-label">Input type</label>
+              <select id="input-type" onchange="toggleInputType()">
+                <option value="text">Plain text</option>
+                <option value="file">File / Image</option>
+              </select>
+            </div>
+            <div class="option-group">
+              <label class="option-label">URL-safe Base64</label>
+              <select id="url-safe">
+                <option value="no">Off</option>
+                <option value="yes">On (+/= → -/_)</option>
+              </select>
+            </div>
+            <div class="option-group" style="margin-left:auto">
+              <button class="panel-btn" onclick="clearAll()">Clear</button>
+              <button class="panel-btn" onclick="loadSample()">Sample</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Text input -->
+        <div class="panel" id="text-input-panel">
+          <div class="panel-header">
+            <span class="panel-title" id="input-title">Input Text</span>
+            <div class="panel-actions"><button class="panel-btn" onclick="DTK.copyText(document.getElementById('input-area').value)">Copy</button></div>
+          </div>
+          <div class="panel-body">
+            <textarea id="input-area" class="code-area" placeholder="Enter text to encode…" spellcheck="false"></textarea>
+          </div>
+          <div class="status-bar"><div class="status-dot" id="in-dot"></div><span id="in-status">Ready</span></div>
+        </div>
+
+        <!-- File input -->
+        <div class="panel" id="file-input-panel" style="display:none">
+          <div class="panel-header"><span class="panel-title">File Input</span></div>
+          <div class="panel-body">
+            <div class="file-drop" id="file-drop" onclick="document.getElementById('file-picker').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event)">
+              <div class="file-drop-icon">📁</div>
+              <div class="file-drop-text">Click or drag & drop a file here</div>
+              <div class="file-info" id="file-info"></div>
+              <input type="file" id="file-picker" style="display:none" onchange="handleFile(this.files[0])" />
+            </div>
+            <img id="img-preview" class="img-preview" alt="preview" />
+          </div>
+        </div>
+
+        <!-- Action -->
+        <div class="action-bar">
+          <button class="btn btn-primary" id="action-btn" onclick="process()">→ Encode to Base64</button>
+          <button class="btn btn-outline" onclick="swapInput()">⇄ Swap Input / Output</button>
+        </div>
+
+        <!-- Output -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title" id="output-title">Base64 Output</span>
+            <div class="panel-actions">
+              <button class="panel-btn" onclick="copyOutput()">Copy</button>
+              <button class="panel-btn" onclick="downloadOutput()">Download</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div id="output-area" style="min-height:160px;font-family:var(--font-mono);font-size:13px;line-height:1.7;word-break:break-all;white-space:pre-wrap;color:var(--text)"></div>
+          </div>
+          <div class="status-bar"><div class="status-dot" id="out-dot"></div><span id="out-status">Output will appear here</span></div>
+        </div>
+
+      </div>
+
+      <!-- Sidebar -->
+      <div class="tool-sidebar">
+        <div class="usage-widget">
+          <div class="usage-title">Daily Usage</div>
+          <div class="usage-count"><span id="usage-count">10</span> <span>/ 10 left</span></div>
+          <div class="usage-bar-bg"><div class="usage-bar-fill" id="usage-bar" style="width:0%"></div></div>
+          <div class="usage-note" id="usage-note">Free plan · resets at midnight.</div>
+          <a href="/#pricing" class="upgrade-cta-small">✦ Upgrade for unlimited →</a>
+        </div>
+        <div class="ad-slot"><div class="ad-slot-label">Advertisement</div><div style="color:var(--text-faint);font-size:12px">AdSense 250×250</div></div>
+        <div class="related-tools">
+          <div class="related-title">Related Tools</div>
+          <a class="related-item" href="/tools/url-encoder.html"><span class="related-icon">%</span> URL Encoder</a>
+          <a class="related-item" href="/tools/json-formatter.html"><span class="related-icon">{ }</span> JSON Formatter</a>
+          <a class="related-item" href="/tools/csv-to-json.html"><span class="related-icon">⇄</span> CSV ↔ JSON</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-links"><a href="/">Home</a><a href="/#tools">All Tools</a><a href="/blog/">Blog</a><a href="/#pricing">Pricing</a></div>
+    <div>© 2025 DevTools Kit · All processing happens in your browser.</div>
+  </div>
+</footer>
+<div class="toast" id="dtk-toast"></div>
+<script src="/js/main.js"></script>
+<script>
+const TOOL_ID = 'base64-encoder';
+DTK.init(TOOL_ID);
+
+let currentMode = 'encode';
+let fileData = null;
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('tab-encode').classList.toggle('active', mode==='encode');
+  document.getElementById('tab-decode').classList.toggle('active', mode==='decode');
+  document.getElementById('input-title').textContent  = mode==='encode' ? 'Input Text' : 'Base64 Input';
+  document.getElementById('output-title').textContent = mode==='encode' ? 'Base64 Output' : 'Decoded Output';
+  document.getElementById('action-btn').textContent   = mode==='encode' ? '→ Encode to Base64' : '← Decode from Base64';
+  document.getElementById('input-area').placeholder   = mode==='encode' ? 'Enter text to encode…' : 'Paste Base64 string to decode…';
+}
+
+function toggleInputType() {
+  const t = document.getElementById('input-type').value;
+  document.getElementById('text-input-panel').style.display = t==='text' ? '' : 'none';
+  document.getElementById('file-input-panel').style.display = t==='file' ? '' : 'none';
+}
+
+function clearAll() {
+  document.getElementById('input-area').value='';
+  document.getElementById('output-area').textContent='';
+  document.getElementById('file-info').textContent='';
+  document.getElementById('img-preview').style.display='none';
+  fileData=null;
+}
+
+function loadSample() {
+  if(currentMode==='encode') document.getElementById('input-area').value='Hello, World! DevTools Kit 🔧';
+  else document.getElementById('input-area').value='SGVsbG8sIFdvcmxkISBEZXZUb29scyBLaXQg8J+UgQ==';
+}
+
+function isUrlSafe(){ return document.getElementById('url-safe').value==='yes'; }
+
+function toUrlSafe(b64){ return b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,''); }
+function fromUrlSafe(b64){ return b64.replace(/-/g,'+').replace(/_/g,'/'); }
+
+function process() {
+  if(!DTK.tryUse(TOOL_ID)) return;
+
+  if(document.getElementById('input-type').value==='file') {
+    if(!fileData){DTK.toast('Select a file first!',true);return;}
+    document.getElementById('output-area').textContent = isUrlSafe()?toUrlSafe(fileData):fileData;
+    document.getElementById('out-dot').className='status-dot ok';
+    document.getElementById('out-status').textContent='File encoded successfully';
+    DTK.toast('File encoded!');
+    return;
+  }
+
+  const input = document.getElementById('input-area').value;
+  if(!input){DTK.toast('Enter something first!',true);return;}
+
+  try {
+    let result;
+    if(currentMode==='encode'){
+      result = btoa(unescape(encodeURIComponent(input)));
+      if(isUrlSafe()) result=toUrlSafe(result);
+      const ratio=((result.length-input.length)/input.length*100).toFixed(1);
+      document.getElementById('out-status').textContent=`Encoded · ${result.length} chars (+${ratio}%)`;
+    } else {
+      let b64 = isUrlSafe()?fromUrlSafe(input):input;
+      // add padding
+      while(b64.length%4) b64+='=';
+      result = decodeURIComponent(escape(atob(b64)));
+      document.getElementById('out-status').textContent=`Decoded · ${result.length} chars`;
+    }
+    document.getElementById('output-area').textContent=result;
+    document.getElementById('out-dot').className='status-dot ok';
+    DTK.toast(currentMode==='encode'?'Encoded!':'Decoded!');
+  } catch(e) {
+    document.getElementById('output-area').textContent='Error: '+e.message;
+    document.getElementById('out-dot').className='status-dot err';
+    document.getElementById('out-status').textContent='Failed — invalid input';
+    DTK.toast('Failed!',true);
+  }
+}
+
+function handleFile(file) {
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    // Strip the data: prefix, keep only base64 part
+    fileData = dataUrl.split(',')[1];
+    document.getElementById('file-info').textContent=`${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+    if(file.type.startsWith('image/')){
+      const img=document.getElementById('img-preview');
+      img.src=dataUrl; img.style.display='block';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('file-drop').classList.remove('dragover');
+  const file=e.dataTransfer.files[0];
+  if(file){document.getElementById('file-picker').files=e.dataTransfer.files;handleFile(file);}
+}
+
+function swapInput() {
+  const out = document.getElementById('output-area').textContent;
+  if(!out){DTK.toast('No output to swap!',true);return;}
+  document.getElementById('input-area').value=out;
+  document.getElementById('output-area').textContent='';
+  setMode(currentMode==='encode'?'decode':'encode');
+}
+
+function copyOutput(){ const t=document.getElementById('output-area').textContent;if(t)DTK.copyText(t);else DTK.toast('Nothing to copy!',true); }
+function downloadOutput(){
+  const t=document.getElementById('output-area').textContent;
+  if(!t){DTK.toast('Nothing to download!',true);return;}
+  const blob=new Blob([t],{type:'text/plain'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='base64.txt';a.click();
+  DTK.toast('Downloaded!');
+}
+</script>
+</body>
+</html>
