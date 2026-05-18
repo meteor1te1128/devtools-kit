@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>URL Encoder & Decoder — Free Online Tool | DevTools Kit</title>
+  <meta name="description" content="Encode and decode URLs and query strings online. Handles components, full URLs, and special characters. Free, fast, browser-based." />
+  <meta name="keywords" content="url encoder, url decoder, encode url online, decode url, percent encoding, query string encoder" />
+  <link rel="canonical" href="https://devtoolskit.com/tools/url-encoder.html" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2300e5a0'/><text x='6' y='23' font-size='20' font-family='monospace' fill='%230a0a0f'>⚙</text></svg>" />
+  <style>
+    .mode-tabs{display:flex;gap:0;max-width:360px;}
+    .mode-tab{flex:1;padding:10px;text-align:center;background:var(--bg3);border:1px solid var(--border);font-family:var(--font-mono);font-size:12px;cursor:pointer;color:var(--text-dim);transition:all .15s;}
+    .mode-tab:first-child{border-radius:var(--radius) 0 0 var(--radius);}
+    .mode-tab:last-child{border-radius:0 var(--radius) var(--radius) 0;border-left:none;}
+    .mode-tab.active{background:var(--accent);color:var(--bg);font-weight:700;border-color:var(--accent);}
+    .parsed-row{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;align-items:flex-start;}
+    .parsed-row:last-child{border-bottom:none;}
+    .parsed-key{color:var(--accent);min-width:110px;font-weight:700;padding-top:1px;}
+    .parsed-val{color:var(--text-dim);word-break:break-all;flex:1;}
+    .parsed-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);min-width:110px;padding-top:1px;}
+    .char-highlight{background:rgba(0,229,160,.1);color:var(--accent);padding:1px 4px;border-radius:3px;font-family:var(--font-mono);}
+  </style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="/"><span>DevTools</span>Kit<span class="logo-badge">FREE</span></a>
+    <div class="nav-links">
+      <a href="/blog/" class="hide-mobile">Blog</a>
+      <a href="/#tools" class="hide-mobile">All Tools</a>
+      <a href="/#pricing" class="btn-upgrade">✦ Go Pro</a>
+    </div>
+  </div>
+</nav>
+
+<div class="tool-page">
+  <div class="container">
+    <div class="breadcrumb"><a href="/">Home</a><span>›</span><a href="/#tools">Tools</a><span>›</span>URL Encoder</div>
+    <div class="tool-page-header">
+      <h1 class="tool-page-title">% URL Encoder / Decoder</h1>
+      <p class="tool-page-subtitle">Percent-encode URLs and query strings, or decode encoded URLs back to readable text.</p>
+    </div>
+
+    <div class="tool-workspace">
+      <div class="tool-main">
+
+        <!-- Mode toggle -->
+        <div class="mode-tabs">
+          <button class="mode-tab active" id="tab-encode" onclick="setMode('encode')">Encode URL</button>
+          <button class="mode-tab" id="tab-decode" onclick="setMode('decode')">Decode URL</button>
+        </div>
+
+        <!-- Options -->
+        <div class="panel">
+          <div class="options-bar">
+            <div class="option-group">
+              <label class="option-label">Encode scope</label>
+              <select id="encode-scope">
+                <option value="component">Component (encodeURIComponent)</option>
+                <option value="full">Full URI (encodeURI)</option>
+              </select>
+            </div>
+            <div class="option-group" style="margin-left:auto">
+              <button class="panel-btn" onclick="clearAll()">Clear</button>
+              <button class="panel-btn" onclick="loadSample()">Sample</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title" id="input-title">Input URL / Text</span>
+            <div class="panel-actions"><button class="panel-btn" onclick="DTK.copyText(document.getElementById('input-area').value)">Copy</button></div>
+          </div>
+          <div class="panel-body">
+            <textarea id="input-area" class="code-area" placeholder="https://example.com/search?q=hello world&lang=en" spellcheck="false" oninput="liveConvert()"></textarea>
+          </div>
+          <div class="status-bar"><div class="status-dot" id="in-dot"></div><span id="in-status">Waiting for input…</span></div>
+        </div>
+
+        <!-- Action -->
+        <div class="action-bar">
+          <button class="btn btn-primary" id="action-btn" onclick="convert()">→ Encode</button>
+          <button class="btn btn-outline" onclick="swapInput()">⇄ Swap</button>
+          <button class="btn btn-outline" onclick="parseURL()">Parse URL</button>
+        </div>
+
+        <!-- Output -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title" id="output-title">Encoded Output</span>
+            <div class="panel-actions">
+              <button class="panel-btn" onclick="copyOutput()">Copy</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div id="output-area" style="min-height:120px;font-family:var(--font-mono);font-size:13px;line-height:1.7;word-break:break-all;white-space:pre-wrap;color:var(--text)"></div>
+          </div>
+          <div class="status-bar"><div class="status-dot" id="out-dot"></div><span id="out-status">Output will appear here</span></div>
+        </div>
+
+        <!-- URL Parser -->
+        <div class="panel" id="parse-panel" style="display:none">
+          <div class="panel-header">
+            <span class="panel-title">URL Components</span>
+            <div class="panel-actions"><button class="panel-btn" onclick="document.getElementById('parse-panel').style.display='none'">✕</button></div>
+          </div>
+          <div class="panel-body" style="padding:8px 16px" id="parse-body"></div>
+        </div>
+
+        <!-- Query String Builder -->
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Query String Builder</span>
+            <div class="panel-actions"><button class="panel-btn" onclick="addParam()">+ Add Param</button></div>
+          </div>
+          <div class="panel-body">
+            <div id="param-list"></div>
+            <button class="btn btn-outline" style="margin-top:12px;font-size:12px;padding:8px 16px" onclick="buildQueryString()">→ Build Query String</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sidebar -->
+      <div class="tool-sidebar">
+        <div class="usage-widget">
+          <div class="usage-title">Daily Usage</div>
+          <div class="usage-count"><span id="usage-count">10</span> <span>/ 10 left</span></div>
+          <div class="usage-bar-bg"><div class="usage-bar-fill" id="usage-bar" style="width:0%"></div></div>
+          <div class="usage-note" id="usage-note">Free plan · resets at midnight.</div>
+          <a href="/#pricing" class="upgrade-cta-small">✦ Upgrade for unlimited →</a>
+        </div>
+        <div class="ad-slot"><div class="ad-slot-label">Advertisement</div><div style="color:var(--text-faint);font-size:12px">AdSense 250×250</div></div>
+        <div class="related-tools">
+          <div class="related-title">Related Tools</div>
+          <a class="related-item" href="/tools/base64-encoder.html"><span class="related-icon">64</span> Base64 Encoder</a>
+          <a class="related-item" href="/tools/json-formatter.html"><span class="related-icon">{ }</span> JSON Formatter</a>
+          <a class="related-item" href="/tools/password-generator.html"><span class="related-icon">🔐</span> Password Generator</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-links"><a href="/">Home</a><a href="/#tools">All Tools</a><a href="/blog/">Blog</a><a href="/#pricing">Pricing</a></div>
+    <div>© 2025 DevTools Kit · All processing happens in your browser.</div>
+  </div>
+</footer>
+<div class="toast" id="dtk-toast"></div>
+<script src="/js/main.js"></script>
+<script>
+const TOOL_ID = 'url-encoder';
+DTK.init(TOOL_ID);
+
+let currentMode = 'encode';
+let paramCount  = 0;
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('tab-encode').classList.toggle('active', mode==='encode');
+  document.getElementById('tab-decode').classList.toggle('active', mode==='decode');
+  document.getElementById('input-title').textContent  = mode==='encode' ? 'Input URL / Text' : 'Encoded URL Input';
+  document.getElementById('output-title').textContent = mode==='encode' ? 'Encoded Output' : 'Decoded Output';
+  document.getElementById('action-btn').textContent   = mode==='encode' ? '→ Encode' : '← Decode';
+  document.getElementById('input-area').placeholder   = mode==='encode' ?
+    'https://example.com/search?q=hello world&lang=en' :
+    'https://example.com/search?q=hello%20world&lang=en';
+}
+
+const SAMPLES = {
+  encode: 'https://example.com/path?name=John Doe&city=New York&msg=Hello! How are you?',
+  decode: 'https%3A%2F%2Fexample.com%2Fpath%3Fname%3DJohn%20Doe%26city%3DNew%20York'
+};
+
+function loadSample() { document.getElementById('input-area').value=SAMPLES[currentMode]; liveConvert(); }
+function clearAll() { document.getElementById('input-area').value=''; document.getElementById('output-area').textContent=''; document.getElementById('parse-panel').style.display='none'; }
+
+function liveConvert() {
+  const v=document.getElementById('input-area').value;
+  if(!v){document.getElementById('in-dot').className='status-dot';document.getElementById('in-status').textContent='Waiting for input…';return;}
+  document.getElementById('in-dot').className='status-dot ok';
+  document.getElementById('in-status').textContent=`${v.length} characters`;
+}
+
+function convert() {
+  if(!DTK.tryUse(TOOL_ID)) return;
+  const input=document.getElementById('input-area').value;
+  if(!input){DTK.toast('Enter something first!',true);return;}
+  try {
+    let result;
+    if(currentMode==='encode'){
+      const scope=document.getElementById('encode-scope').value;
+      result=scope==='full'?encodeURI(input):encodeURIComponent(input);
+      const pct=Math.round((result.length-input.length)/input.length*100);
+      document.getElementById('out-status').textContent=`Encoded · ${result.length} chars (+${pct}%)`;
+    } else {
+      result=decodeURIComponent(input.replace(/\+/g,' '));
+      document.getElementById('out-status').textContent=`Decoded · ${result.length} chars`;
+    }
+    document.getElementById('output-area').textContent=result;
+    document.getElementById('out-dot').className='status-dot ok';
+    DTK.toast(currentMode==='encode'?'Encoded!':'Decoded!');
+  } catch(e){
+    document.getElementById('output-area').textContent='Error: '+e.message;
+    document.getElementById('out-dot').className='status-dot err';
+    document.getElementById('out-status').textContent='Failed — invalid input';
+    DTK.toast('Failed!',true);
+  }
+}
+
+function swapInput() {
+  const out=document.getElementById('output-area').textContent;
+  if(!out){DTK.toast('No output to swap!',true);return;}
+  document.getElementById('input-area').value=out;
+  document.getElementById('output-area').textContent='';
+  setMode(currentMode==='encode'?'decode':'encode');
+}
+
+function parseURL() {
+  const raw=document.getElementById('input-area').value.trim();
+  if(!raw){DTK.toast('Enter a URL first!',true);return;}
+  try {
+    // try to parse, add https:// if missing
+    const urlStr=raw.startsWith('http')?raw:'https://'+raw;
+    const u=new URL(urlStr);
+    const params=[];
+    u.searchParams.forEach((v,k)=>params.push({k,v}));
+    let html=`
+      <div class="parsed-row"><span class="parsed-key">Protocol</span><span class="parsed-val">${u.protocol}</span></div>
+      <div class="parsed-row"><span class="parsed-key">Host</span><span class="parsed-val">${u.host}</span></div>
+      ${u.pathname!=='/'?`<div class="parsed-row"><span class="parsed-key">Path</span><span class="parsed-val">${u.pathname}</span></div>`:''}
+      ${params.length?`<div class="parsed-row"><span class="parsed-key">Query Params</span><span class="parsed-val">${params.map(p=>`<span class="char-highlight">${p.k}</span> = ${p.v}`).join('<br>')}</span></div>`:''}
+      ${u.hash?`<div class="parsed-row"><span class="parsed-key">Fragment</span><span class="parsed-val">${u.hash}</span></div>`:''}
+    `;
+    document.getElementById('parse-body').innerHTML=html;
+    document.getElementById('parse-panel').style.display='';
+  } catch(e){ DTK.toast('Invalid URL: '+e.message,true); }
+}
+
+/* ---- Query string builder ---- */
+function addParam() {
+  paramCount++;
+  const div=document.createElement('div');
+  div.id='param-'+paramCount;
+  div.style.cssText='display:flex;gap:8px;margin-bottom:8px;align-items:center';
+  div.innerHTML=`
+    <input placeholder="key" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:13px;padding:8px 10px;border-radius:var(--radius);outline:none" />
+    <input placeholder="value" style="flex:2;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:13px;padding:8px 10px;border-radius:var(--radius);outline:none" />
+    <button class="panel-btn" onclick="this.parentElement.remove()">✕</button>`;
+  document.getElementById('param-list').appendChild(div);
+}
+
+function buildQueryString() {
+  const rows=document.querySelectorAll('#param-list > div');
+  if(!rows.length){DTK.toast('Add some parameters first!',true);return;}
+  const params=[];
+  rows.forEach(row=>{
+    const inputs=row.querySelectorAll('input');
+    const k=inputs[0].value.trim(), v=inputs[1].value.trim();
+    if(k) params.push(encodeURIComponent(k)+'='+encodeURIComponent(v));
+  });
+  const qs='?'+params.join('&');
+  document.getElementById('output-area').textContent=qs;
+  document.getElementById('out-dot').className='status-dot ok';
+  document.getElementById('out-status').textContent=`Query string · ${params.length} params`;
+  DTK.toast('Query string built!');
+}
+
+function copyOutput(){ const t=document.getElementById('output-area').textContent;if(t)DTK.copyText(t);else DTK.toast('Nothing to copy!',true); }
+
+// Add one param row by default
+addParam();
+</script>
+</body>
+</html>
