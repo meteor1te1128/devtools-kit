@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSV to JSON Converter — Free Online Tool | DevTools Kit</title>
+  <meta name="description" content="Convert CSV to JSON or JSON to CSV instantly online. Supports custom delimiters, headers, and nested data. Free, browser-based, no upload required." />
+  <meta name="keywords" content="csv to json, json to csv, csv converter, convert csv online, csv json tool" />
+  <link rel="canonical" href="https://devtoolskit.com/tools/csv-to-json.html" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2300e5a0'/><text x='6' y='23' font-size='20' font-family='monospace' fill='%230a0a0f'>⚙</text></svg>" />
+  <style>
+    .mode-tabs { display:flex; gap:0; }
+    .mode-tab {
+      flex:1; padding:10px; text-align:center;
+      background:var(--bg3); border:1px solid var(--border);
+      font-family:var(--font-mono); font-size:12px; cursor:pointer;
+      color:var(--text-dim); transition:all .15s;
+    }
+    .mode-tab:first-child { border-radius:var(--radius) 0 0 var(--radius); }
+    .mode-tab:last-child  { border-radius:0 var(--radius) var(--radius) 0; border-left:none; }
+    .mode-tab.active { background:var(--accent); color:var(--bg); font-weight:700; border-color:var(--accent); }
+    table.preview-table { width:100%; border-collapse:collapse; font-size:12px; }
+    table.preview-table th { background:var(--bg3); color:var(--accent); padding:8px 10px; text-align:left; border-bottom:1px solid var(--border); }
+    table.preview-table td { padding:7px 10px; border-bottom:1px solid var(--border); color:var(--text-dim); }
+    table.preview-table tr:last-child td { border-bottom:none; }
+    .preview-scroll { overflow-x:auto; max-height:220px; overflow-y:auto; }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="/"><span>DevTools</span>Kit<span class="logo-badge">FREE</span></a>
+    <div class="nav-links">
+      <a href="/blog/" class="hide-mobile">Blog</a>
+      <a href="/#tools" class="hide-mobile">All Tools</a>
+      <a href="/#pricing" class="btn-upgrade">✦ Go Pro</a>
+    </div>
+  </div>
+</nav>
+
+<div class="tool-page">
+  <div class="container">
+    <div class="breadcrumb"><a href="/">Home</a><span>›</span><a href="/#tools">Tools</a><span>›</span>CSV ↔ JSON</div>
+    <div class="tool-page-header">
+      <h1 class="tool-page-title">⇄ CSV ↔ JSON Converter</h1>
+      <p class="tool-page-subtitle">Convert CSV to JSON or JSON to CSV — handles headers, quoted fields, custom delimiters.</p>
+    </div>
+
+    <div class="tool-workspace">
+      <div class="tool-main">
+
+        <!-- Mode toggle -->
+        <div style="margin-bottom:4px">
+          <div class="mode-tabs">
+            <button class="mode-tab active" id="tab-csv2json" onclick="setMode('csv2json')">CSV → JSON</button>
+            <button class="mode-tab" id="tab-json2csv" onclick="setMode('json2csv')">JSON → CSV</button>
+          </div>
+        </div>
+
+        <!-- Options -->
+        <div class="panel">
+          <div class="options-bar">
+            <div class="option-group">
+              <label class="option-label">Delimiter</label>
+              <select id="delimiter">
+                <option value=",">Comma ( , )</option>
+                <option value=";">Semicolon ( ; )</option>
+                <option value="\t">Tab</option>
+                <option value="|">Pipe ( | )</option>
+              </select>
+            </div>
+            <div class="option-group">
+              <label class="option-label">First row is header</label>
+              <select id="has-header">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            <div class="option-group" style="margin-left:auto">
+              <button class="panel-btn" onclick="clearAll()">Clear</button>
+              <button class="panel-btn" onclick="loadSample()">Sample</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title" id="input-label">Input CSV</span>
+            <div class="panel-actions">
+              <button class="panel-btn" onclick="DTK.copyText(document.getElementById('input-area').value)">Copy</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <textarea id="input-area" class="code-area" placeholder="Paste CSV or JSON here..." spellcheck="false"></textarea>
+          </div>
+          <div class="status-bar"><div class="status-dot" id="status-dot"></div><span id="status-text">Waiting for input…</span></div>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn btn-primary" onclick="convert()">→ Convert</button>
+          <button class="btn btn-outline" onclick="showPreview()">Preview Table</button>
+        </div>
+
+        <!-- Output -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title" id="output-label">Output JSON</span>
+            <div class="panel-actions">
+              <button class="panel-btn" onclick="copyOutput()">Copy</button>
+              <button class="panel-btn" onclick="downloadOutput()">Download</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div id="output-area" style="min-height:200px;font-family:var(--font-mono);font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-all;color:var(--text)"></div>
+          </div>
+          <div class="status-bar"><div class="status-dot" id="out-dot"></div><span id="out-status">Output will appear here</span></div>
+        </div>
+
+        <!-- Preview table -->
+        <div class="panel" id="preview-panel" style="display:none">
+          <div class="panel-header"><span class="panel-title">Table Preview</span><div class="panel-actions"><button class="panel-btn" onclick="document.getElementById('preview-panel').style.display='none'">✕ Close</button></div></div>
+          <div class="panel-body preview-scroll"><div id="preview-table"></div></div>
+        </div>
+
+      </div>
+
+      <!-- Sidebar -->
+      <div class="tool-sidebar">
+        <div class="usage-widget">
+          <div class="usage-title">Daily Usage</div>
+          <div class="usage-count"><span id="usage-count">10</span> <span>/ 10 left</span></div>
+          <div class="usage-bar-bg"><div class="usage-bar-fill" id="usage-bar" style="width:0%"></div></div>
+          <div class="usage-note" id="usage-note">Free plan · resets at midnight.</div>
+          <a href="/#pricing" class="upgrade-cta-small">✦ Upgrade for unlimited →</a>
+        </div>
+        <div class="ad-slot"><div class="ad-slot-label">Advertisement</div><div style="color:var(--text-faint);font-size:12px">AdSense 250×250</div></div>
+        <div class="related-tools">
+          <div class="related-title">Related Tools</div>
+          <a class="related-item" href="/tools/json-formatter.html"><span class="related-icon">{ }</span> JSON Formatter</a>
+          <a class="related-item" href="/tools/base64-encoder.html"><span class="related-icon">64</span> Base64 Encoder</a>
+          <a class="related-item" href="/tools/url-encoder.html"><span class="related-icon">%</span> URL Encoder</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-links"><a href="/">Home</a><a href="/#tools">All Tools</a><a href="/blog/">Blog</a><a href="/#pricing">Pricing</a></div>
+    <div>© 2025 DevTools Kit · All processing happens in your browser.</div>
+  </div>
+</footer>
+<div class="toast" id="dtk-toast"></div>
+<script src="/js/main.js"></script>
+<script>
+const TOOL_ID = 'csv-to-json';
+DTK.init(TOOL_ID);
+
+let currentMode = 'csv2json';
+
+const CSV_SAMPLE = `name,age,city,active
+Alice,30,New York,true
+Bob,25,London,false
+Carol,35,Tokyo,true`;
+
+const JSON_SAMPLE = JSON.stringify([
+  {name:"Alice",age:30,city:"New York",active:true},
+  {name:"Bob",age:25,city:"London",active:false},
+  {name:"Carol",age:35,city:"Tokyo",active:true}
+], null, 2);
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('tab-csv2json').classList.toggle('active', mode==='csv2json');
+  document.getElementById('tab-json2csv').classList.toggle('active', mode==='json2csv');
+  document.getElementById('input-label').textContent  = mode==='csv2json' ? 'Input CSV' : 'Input JSON';
+  document.getElementById('output-label').textContent = mode==='csv2json' ? 'Output JSON' : 'Output CSV';
+  document.getElementById('input-area').placeholder   = mode==='csv2json' ? 'Paste CSV here...' : 'Paste JSON array here...';
+  clearAll();
+}
+
+function loadSample() {
+  document.getElementById('input-area').value = currentMode==='csv2json' ? CSV_SAMPLE : JSON_SAMPLE;
+}
+function clearAll() {
+  document.getElementById('input-area').value='';
+  document.getElementById('output-area').textContent='';
+  document.getElementById('preview-panel').style.display='none';
+}
+
+function getDelimiter() {
+  const v = document.getElementById('delimiter').value;
+  return v === '\\t' ? '\t' : v;
+}
+
+function parseCSV(text, delim, hasHeader) {
+  const lines = text.trim().split(/\r?\n/);
+  const rows = lines.map(line => {
+    const cells=[]; let cur='', inQ=false;
+    for(let i=0;i<line.length;i++){
+      const ch=line[i];
+      if(ch==='"'){ inQ=!inQ; continue; }
+      if(ch===delim&&!inQ){ cells.push(cur); cur=''; continue; }
+      cur+=ch;
+    }
+    cells.push(cur);
+    return cells;
+  });
+  if(hasHeader==='yes'){
+    const headers=rows[0];
+    return rows.slice(1).map(r=>{const o={};headers.forEach((h,i)=>o[h.trim()]=autoType(r[i]??''));return o;});
+  } else {
+    return rows.map(r=>r.map(autoType));
+  }
+}
+
+function autoType(v) {
+  const s=String(v).trim();
+  if(s==='true')return true; if(s==='false')return false;
+  if(s===''||s==='null')return null;
+  const n=Number(s);
+  return isNaN(n)?s:n;
+}
+
+function jsonToCSV(arr, delim) {
+  if(!Array.isArray(arr)||!arr.length) throw new Error('Input must be a non-empty JSON array');
+  const headers=Object.keys(arr[0]);
+  const escape=v=>{const s=String(v??'');return s.includes(delim)||s.includes('"')||s.includes('\n')?`"${s.replace(/"/g,'""')}"`:s;};
+  const rows=[headers.map(escape).join(delim),...arr.map(r=>headers.map(h=>escape(r[h]??'')).join(delim))];
+  return rows.join('\n');
+}
+
+function convert() {
+  if(!DTK.tryUse(TOOL_ID)) return;
+  const raw=document.getElementById('input-area').value.trim();
+  if(!raw){DTK.toast('Nothing to convert!',true);return;}
+  const delim=getDelimiter(), hasHeader=document.getElementById('has-header').value;
+  try {
+    let result;
+    if(currentMode==='csv2json'){
+      const data=parseCSV(raw,delim,hasHeader);
+      result=JSON.stringify(data,null,2);
+      document.getElementById('out-dot').className='status-dot ok';
+      document.getElementById('out-status').textContent=`Converted · ${data.length} rows`;
+    } else {
+      const arr=JSON.parse(raw);
+      result=jsonToCSV(arr,delim);
+      document.getElementById('out-dot').className='status-dot ok';
+      document.getElementById('out-status').textContent=`Converted · ${arr.length} rows`;
+    }
+    document.getElementById('output-area').textContent=result;
+    DTK.toast('Converted!');
+  } catch(e){
+    document.getElementById('output-area').textContent='Error: '+e.message;
+    document.getElementById('out-dot').className='status-dot err';
+    document.getElementById('out-status').textContent='Conversion failed';
+    DTK.toast('Conversion failed!',true);
+  }
+}
+
+function showPreview() {
+  const raw=document.getElementById('input-area').value.trim();
+  if(!raw){DTK.toast('Paste input first!',true);return;}
+  const delim=getDelimiter(), hasHeader=document.getElementById('has-header').value;
+  try {
+    let data;
+    if(currentMode==='csv2json') data=parseCSV(raw,delim,hasHeader);
+    else data=JSON.parse(raw);
+    if(!Array.isArray(data)||!data.length) throw new Error('No data');
+    const headers=typeof data[0]==='object'?Object.keys(data[0]):data[0].map((_,i)=>'Col '+(i+1));
+    let html='<table class="preview-table"><thead><tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr></thead><tbody>';
+    const rows=typeof data[0]==='object'?data:data.slice(1);
+    rows.slice(0,20).forEach(r=>{
+      html+='<tr>'+headers.map(h=>`<td>${r[h]??''}</td>`).join('')+'</tr>';
+    });
+    if(rows.length>20) html+=`<tr><td colspan="${headers.length}" style="color:var(--text-faint);text-align:center">… ${rows.length-20} more rows</td></tr>`;
+    html+='</tbody></table>';
+    document.getElementById('preview-table').innerHTML=html;
+    document.getElementById('preview-panel').style.display='';
+  } catch(e){ DTK.toast('Preview failed: '+e.message,true); }
+}
+
+function copyOutput(){ const t=document.getElementById('output-area').textContent; if(t)DTK.copyText(t); else DTK.toast('Nothing to copy!',true); }
+function downloadOutput(){
+  const t=document.getElementById('output-area').textContent;
+  if(!t){DTK.toast('Nothing to download!',true);return;}
+  const ext=currentMode==='csv2json'?'json':'csv';
+  const blob=new Blob([t],{type:'text/plain'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`converted.${ext}`; a.click();
+  DTK.toast('Downloaded!');
+}
+</script>
+</body>
+</html>
