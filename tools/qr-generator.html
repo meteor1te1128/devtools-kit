@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code Generator — Free Online QR Maker | DevTools Kit</title>
+  <meta name="description" content="Generate QR codes for URLs, text, emails, phone numbers, and Wi-Fi credentials. Download as PNG. Free, fast, no login required." />
+  <meta name="keywords" content="qr code generator, free qr code, qr maker online, create qr code, qr code for website" />
+  <link rel="canonical" href="https://devtoolskit.com/tools/qr-generator.html" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2300e5a0'/><text x='6' y='23' font-size='20' font-family='monospace' fill='%230a0a0f'>⚙</text></svg>" />
+  <style>
+    .qr-preview {
+      background: #fff; border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      width: 240px; height: 240px; margin: 0 auto;
+      position: relative;
+    }
+    .qr-preview canvas, .qr-preview img { border-radius: 4px; }
+    .qr-placeholder { color: #999; font-size: 13px; text-align: center; }
+    .type-tabs { display:flex; gap:8px; flex-wrap:wrap; }
+    .type-tab {
+      padding:6px 14px; border-radius:20px; font-size:12px;
+      border:1px solid var(--border); background:transparent;
+      color:var(--text-dim); cursor:pointer; font-family:var(--font-mono);
+      transition:all .15s;
+    }
+    .type-tab.active { background:var(--accent); color:var(--bg); border-color:var(--accent); font-weight:700; }
+    .form-group { margin-bottom:14px; }
+    .form-group label { display:block; font-size:12px; color:var(--text-dim); margin-bottom:6px; text-transform:uppercase; letter-spacing:.05em; }
+    .form-group input, .form-group select, .form-group textarea {
+      width:100%; background:var(--bg3); border:1px solid var(--border);
+      color:var(--text); font-family:var(--font-mono); font-size:13px;
+      padding:10px 14px; border-radius:var(--radius); outline:none;
+      transition:border .15s;
+    }
+    .form-group input:focus, .form-group textarea:focus { border-color:var(--accent); }
+    .size-btn { padding:6px 12px; border:1px solid var(--border); background:var(--bg3); color:var(--text-dim); border-radius:6px; font-family:var(--font-mono); font-size:11px; cursor:pointer; transition:all .15s; }
+    .size-btn.active { border-color:var(--accent); color:var(--accent); }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="/"><span>DevTools</span>Kit<span class="logo-badge">FREE</span></a>
+    <div class="nav-links">
+      <a href="/blog/" class="hide-mobile">Blog</a>
+      <a href="/#tools" class="hide-mobile">All Tools</a>
+      <a href="/#pricing" class="btn-upgrade">✦ Go Pro</a>
+    </div>
+  </div>
+</nav>
+
+<div class="tool-page">
+  <div class="container">
+    <div class="breadcrumb"><a href="/">Home</a><span>›</span><a href="/#tools">Tools</a><span>›</span>QR Generator</div>
+    <div class="tool-page-header">
+      <h1 class="tool-page-title">▦ QR Code Generator</h1>
+      <p class="tool-page-subtitle">Create QR codes for URLs, text, email, phone, or Wi-Fi. Download as PNG instantly.</p>
+    </div>
+
+    <div class="tool-workspace">
+      <div class="tool-main">
+
+        <!-- Type selector -->
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Content Type</span></div>
+          <div class="panel-body">
+            <div class="type-tabs">
+              <button class="type-tab active" onclick="setType('url')">🔗 URL</button>
+              <button class="type-tab" onclick="setType('text')">📝 Text</button>
+              <button class="type-tab" onclick="setType('email')">✉️ Email</button>
+              <button class="type-tab" onclick="setType('phone')">📞 Phone</button>
+              <button class="type-tab" onclick="setType('wifi')">📶 Wi-Fi</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input form -->
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title" id="form-title">URL Input</span></div>
+          <div class="panel-body" id="form-body">
+            <!-- URL form (default) -->
+            <div id="form-url">
+              <div class="form-group"><label>Website URL</label><input type="url" id="in-url" placeholder="https://example.com" /></div>
+            </div>
+            <div id="form-text" style="display:none">
+              <div class="form-group"><label>Text Content</label><textarea id="in-text" rows="4" placeholder="Enter any text..."></textarea></div>
+            </div>
+            <div id="form-email" style="display:none">
+              <div class="form-group"><label>Email Address</label><input type="email" id="in-email" placeholder="someone@example.com" /></div>
+              <div class="form-group"><label>Subject (optional)</label><input type="text" id="in-email-subject" placeholder="Hello there" /></div>
+              <div class="form-group"><label>Body (optional)</label><textarea id="in-email-body" rows="3" placeholder="Message body..."></textarea></div>
+            </div>
+            <div id="form-phone" style="display:none">
+              <div class="form-group"><label>Phone Number</label><input type="tel" id="in-phone" placeholder="+1 555 000 0000" /></div>
+            </div>
+            <div id="form-wifi" style="display:none">
+              <div class="form-group"><label>Network Name (SSID)</label><input type="text" id="in-ssid" placeholder="MyNetwork" /></div>
+              <div class="form-group"><label>Password</label><input type="text" id="in-wifi-pass" placeholder="Password" /></div>
+              <div class="form-group"><label>Security</label>
+                <select id="in-wifi-sec"><option value="WPA">WPA/WPA2</option><option value="WEP">WEP</option><option value="">None</option></select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Size options -->
+        <div class="panel">
+          <div class="options-bar">
+            <div class="option-group"><label class="option-label">Size</label>
+              <button class="size-btn" onclick="setSize(128, this)">128px</button>
+              <button class="size-btn active" onclick="setSize(256, this)">256px</button>
+              <button class="size-btn" onclick="setSize(512, this)">512px</button>
+            </div>
+            <div class="option-group"><label class="option-label">Error Correction</label>
+              <select id="ec-level"><option value="L">Low (7%)</option><option value="M" selected>Medium (15%)</option><option value="Q">Quartile (25%)</option><option value="H">High (30%)</option></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn btn-primary" onclick="generateQR()">→ Generate QR Code</button>
+        </div>
+
+        <!-- QR preview + download -->
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">QR Code Preview</span>
+            <div class="panel-actions">
+              <button class="panel-btn" id="dl-btn" onclick="downloadQR()" style="display:none">Download PNG</button>
+            </div>
+          </div>
+          <div class="panel-body" style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:32px 16px">
+            <div class="qr-preview" id="qr-preview">
+              <div class="qr-placeholder">QR code will appear here</div>
+            </div>
+            <div id="qr-status" style="font-size:12px;color:var(--text-dim)"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sidebar -->
+      <div class="tool-sidebar">
+        <div class="usage-widget">
+          <div class="usage-title">Daily Usage</div>
+          <div class="usage-count"><span id="usage-count">10</span> <span>/ 10 left</span></div>
+          <div class="usage-bar-bg"><div class="usage-bar-fill" id="usage-bar" style="width:0%"></div></div>
+          <div class="usage-note" id="usage-note">Free plan · resets at midnight.</div>
+          <a href="/#pricing" class="upgrade-cta-small">✦ Upgrade for unlimited →</a>
+        </div>
+        <div class="ad-slot"><div class="ad-slot-label">Advertisement</div><div style="color:var(--text-faint);font-size:12px">AdSense 250×250</div></div>
+        <div class="related-tools">
+          <div class="related-title">Related Tools</div>
+          <a class="related-item" href="/tools/password-generator.html"><span class="related-icon">🔐</span> Password Generator</a>
+          <a class="related-item" href="/tools/url-encoder.html"><span class="related-icon">%</span> URL Encoder</a>
+          <a class="related-item" href="/tools/base64-encoder.html"><span class="related-icon">64</span> Base64 Encoder</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-links"><a href="/">Home</a><a href="/#tools">All Tools</a><a href="/blog/">Blog</a><a href="/#pricing">Pricing</a></div>
+    <div>© 2025 DevTools Kit · All processing happens in your browser.</div>
+  </div>
+</footer>
+<div class="toast" id="dtk-toast"></div>
+
+<!-- QR library from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="/js/main.js"></script>
+<script>
+const TOOL_ID = 'qr-generator';
+DTK.init(TOOL_ID);
+
+let currentType = 'url';
+let currentSize = 256;
+let qrInstance = null;
+
+function setType(type) {
+  currentType = type;
+  document.querySelectorAll('.type-tab').forEach(t=>t.classList.remove('active'));
+  event.target.classList.add('active');
+  ['url','text','email','phone','wifi'].forEach(t=>{
+    document.getElementById('form-'+t).style.display = t===type?'':'none';
+  });
+  const titles = {url:'URL Input',text:'Text Content',email:'Email Details',phone:'Phone Number',wifi:'Wi-Fi Credentials'};
+  document.getElementById('form-title').textContent = titles[type];
+}
+
+function setSize(size, btn) {
+  currentSize = size;
+  document.querySelectorAll('.size-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function buildContent() {
+  switch(currentType) {
+    case 'url':   return document.getElementById('in-url').value.trim();
+    case 'text':  return document.getElementById('in-text').value.trim();
+    case 'phone': return 'tel:'+document.getElementById('in-phone').value.trim();
+    case 'email': {
+      const e=document.getElementById('in-email').value.trim();
+      const s=encodeURIComponent(document.getElementById('in-email-subject').value.trim());
+      const b=encodeURIComponent(document.getElementById('in-email-body').value.trim());
+      return `mailto:${e}${s||b?'?':''}${s?'subject='+s:''}${s&&b?'&':''}${b?'body='+b:''}`;
+    }
+    case 'wifi': {
+      const ssid=document.getElementById('in-ssid').value.trim();
+      const pass=document.getElementById('in-wifi-pass').value;
+      const sec=document.getElementById('in-wifi-sec').value;
+      return `WIFI:T:${sec};S:${ssid};P:${pass};;`;
+    }
+    default: return '';
+  }
+}
+
+function generateQR() {
+  if(!DTK.tryUse(TOOL_ID)) return;
+  const content = buildContent();
+  if(!content){DTK.toast('Enter some content first!',true);return;}
+
+  const preview = document.getElementById('qr-preview');
+  preview.innerHTML = '';
+
+  try {
+    qrInstance = new QRCode(preview, {
+      text: content,
+      width: currentSize,
+      height: currentSize,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel[document.getElementById('ec-level').value]
+    });
+    document.getElementById('dl-btn').style.display = '';
+    document.getElementById('qr-status').textContent = `✓ Generated · ${content.length} chars · ${currentSize}×${currentSize}px`;
+    DTK.toast('QR code generated!');
+  } catch(e) {
+    preview.innerHTML = '<div class="qr-placeholder" style="color:var(--accent3)">Generation failed. Input may be too long.</div>';
+    DTK.toast('Failed: '+e.message, true);
+  }
+}
+
+function downloadQR() {
+  const canvas = document.querySelector('#qr-preview canvas');
+  const img    = document.querySelector('#qr-preview img');
+  let url;
+  if(canvas) url = canvas.toDataURL('image/png');
+  else if(img) url = img.src;
+  else { DTK.toast('Generate a QR code first!', true); return; }
+  const a = document.createElement('a');
+  a.href = url; a.download = 'qrcode.png'; a.click();
+  DTK.toast('Downloaded!');
+}
+</script>
+</body>
+</html>
