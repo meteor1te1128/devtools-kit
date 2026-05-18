@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON Formatter & Validator — Free Online Tool | DevTools Kit</title>
+  <meta name="description" content="Free online JSON formatter, validator and minifier. Instantly beautify or minify JSON with syntax error detection. No signup, works in your browser." />
+  <meta name="keywords" content="json formatter, json validator, json beautifier, json minifier, format json online, json pretty print" />
+  <link rel="canonical" href="https://devtoolskit.com/tools/json-formatter.html" />
+
+  <meta property="og:title" content="JSON Formatter & Validator — Free Online Tool" />
+  <meta property="og:description" content="Instantly format, validate and minify JSON. Works in your browser, no data sent to server." />
+  <meta property="og:type" content="website" />
+
+  <link rel="stylesheet" href="/css/style.css" />
+  <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXX" crossorigin="anonymous"></script> -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2300e5a0'/><text x='6' y='23' font-size='20' font-family='monospace' fill='%230a0a0f'>⚙</text></svg>" />
+
+  <style>
+    /* JSON syntax highlight */
+    .json-output { white-space: pre-wrap; word-break: break-all; }
+    .json-key    { color: #7c6aff; }
+    .json-str    { color: #00e5a0; }
+    .json-num    { color: #ff9f43; }
+    .json-bool   { color: #ff6b6b; }
+    .json-null   { color: #7a7a92; }
+
+    .error-line {
+      background: rgba(255,107,107,.08);
+      border-left: 3px solid var(--accent3);
+      padding: 10px 14px;
+      font-size: 13px; color: var(--accent3);
+      border-radius: 0 6px 6px 0;
+    }
+
+    #output-area {
+      min-height: 260px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      outline: none;
+      width: 100%;
+    }
+
+    .tree-toggle { cursor: pointer; user-select: none; }
+    .tree-toggle:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="/">
+        <span>DevTools</span>Kit
+        <span class="logo-badge">FREE</span>
+      </a>
+      <div class="nav-links">
+        <a href="/blog/" class="hide-mobile">Blog</a>
+        <a href="/#tools" class="hide-mobile">All Tools</a>
+        <a href="/#pricing" class="btn-upgrade">✦ Go Pro</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- TOOL PAGE -->
+  <div class="tool-page">
+    <div class="container">
+
+      <!-- Breadcrumb -->
+      <div class="breadcrumb">
+        <a href="/">Home</a>
+        <span>›</span>
+        <a href="/#tools">Tools</a>
+        <span>›</span>
+        JSON Formatter
+      </div>
+
+      <!-- Header -->
+      <div class="tool-page-header">
+        <h1 class="tool-page-title">{ } JSON Formatter &amp; Validator</h1>
+        <p class="tool-page-subtitle">Beautify, minify and validate JSON instantly — 100% client-side, no data sent anywhere.</p>
+      </div>
+
+      <!-- Workspace -->
+      <div class="tool-workspace">
+
+        <!-- Main panel -->
+        <div class="tool-main">
+
+          <!-- Options bar -->
+          <div class="panel" style="overflow:visible">
+            <div class="options-bar">
+              <div class="option-group">
+                <label class="option-label" for="indent-select">Indent</label>
+                <select id="indent-select">
+                  <option value="2">2 spaces</option>
+                  <option value="4">4 spaces</option>
+                  <option value="tab">Tab</option>
+                </select>
+              </div>
+              <div class="option-group">
+                <label class="option-label" for="sort-select">Sort keys</label>
+                <select id="sort-select">
+                  <option value="none">Off</option>
+                  <option value="asc">A → Z</option>
+                  <option value="desc">Z → A</option>
+                </select>
+              </div>
+              <div class="option-group" style="margin-left:auto">
+                <button class="panel-btn" onclick="clearAll()">Clear</button>
+                <button class="panel-btn" onclick="loadSample()">Sample</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Input -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Input JSON</span>
+              <div class="panel-actions">
+                <button class="panel-btn" onclick="pasteFromClipboard()">Paste</button>
+                <button class="panel-btn" onclick="DTK.copyText(document.getElementById('input-area').value)">Copy</button>
+              </div>
+            </div>
+            <div class="panel-body">
+              <textarea
+                id="input-area"
+                class="code-area"
+                placeholder='Paste your JSON here... e.g. {"name":"Alice","age":30}'
+                oninput="onInput()"
+                spellcheck="false"
+              ></textarea>
+            </div>
+            <div class="status-bar" id="input-status">
+              <div class="status-dot" id="status-dot"></div>
+              <span id="status-text">Waiting for input…</span>
+            </div>
+          </div>
+
+          <!-- Action bar -->
+          <div class="action-bar">
+            <button class="btn btn-primary" onclick="formatJSON()">→ Format / Beautify</button>
+            <button class="btn btn-outline" onclick="minifyJSON()">Minify</button>
+            <button class="btn btn-outline" onclick="validateOnly()">Validate</button>
+          </div>
+
+          <!-- Output -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Output</span>
+              <div class="panel-actions">
+                <button class="panel-btn" id="copy-btn" onclick="copyOutput()">Copy</button>
+                <button class="panel-btn" onclick="downloadOutput()">Download</button>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div id="output-area" class="json-output"></div>
+            </div>
+            <div class="status-bar">
+              <div class="status-dot" id="out-dot"></div>
+              <span id="out-status">Output will appear here</span>
+            </div>
+          </div>
+
+        </div><!-- /tool-main -->
+
+        <!-- Sidebar -->
+        <div class="tool-sidebar">
+
+          <!-- Usage widget -->
+          <div class="usage-widget">
+            <div class="usage-title">Daily Usage</div>
+            <div class="usage-count"><span id="usage-count">10</span> <span>/ 10 left</span></div>
+            <div class="usage-bar-bg">
+              <div class="usage-bar-fill" id="usage-bar" style="width:0%"></div>
+            </div>
+            <div class="usage-note" id="usage-note">Free plan · resets at midnight.</div>
+            <a href="/#pricing" class="upgrade-cta-small">✦ Upgrade for unlimited →</a>
+          </div>
+
+          <!-- Ad slot -->
+          <div class="ad-slot">
+            <!-- Replace with AdSense code:
+            <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-XXXX"
+               data-ad-slot="YYYY"
+               data-ad-format="auto"></ins>
+            <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            -->
+            <div class="ad-slot-label">Advertisement</div>
+            <div style="color:var(--text-faint);font-size:12px">AdSense block here<br/>250×250</div>
+          </div>
+
+          <!-- Related tools -->
+          <div class="related-tools">
+            <div class="related-title">Related Tools</div>
+            <a class="related-item" href="/tools/csv-to-json.html">
+              <span class="related-icon">⇄</span> CSV ↔ JSON Converter
+            </a>
+            <a class="related-item" href="/tools/base64-encoder.html">
+              <span class="related-icon">64</span> Base64 Encoder
+            </a>
+            <a class="related-item" href="/tools/url-encoder.html">
+              <span class="related-icon">%</span> URL Encoder
+            </a>
+            <a class="related-item" href="/tools/password-generator.html">
+              <span class="related-icon">🔐</span> Password Generator
+            </a>
+          </div>
+
+        </div><!-- /sidebar -->
+
+      </div><!-- /workspace -->
+
+      <!-- SEO content block -->
+      <div style="margin-top:64px;padding-top:48px;border-top:1px solid var(--border);max-width:720px">
+        <h2 style="font-family:var(--font-head);font-size:22px;font-weight:800;margin-bottom:16px">How to use the JSON Formatter</h2>
+        <p style="color:var(--text-dim);line-height:1.8;margin-bottom:16px">
+          Paste or type your JSON into the Input panel, then click <strong style="color:var(--text)">Format / Beautify</strong> to get
+          a nicely indented, human-readable version. You can customise the indent size (2 spaces, 4 spaces, or tabs)
+          and optionally sort keys alphabetically before formatting.
+        </p>
+        <p style="color:var(--text-dim);line-height:1.8;margin-bottom:16px">
+          The <strong style="color:var(--text)">Minify</strong> button removes all whitespace to produce the most compact
+          JSON possible — ideal for reducing payload sizes in APIs. The <strong style="color:var(--text)">Validate</strong>
+          button checks your JSON without modifying it, and points to the exact line and column of any syntax error.
+        </p>
+        <p style="color:var(--text-dim);line-height:1.8">
+          Everything runs entirely in your browser using the native <code style="color:var(--accent)">JSON.parse</code> API —
+          your data is never uploaded to any server.
+        </p>
+      </div>
+
+    </div>
+  </div><!-- /tool-page -->
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/#tools">All Tools</a>
+        <a href="/blog/">Blog</a>
+        <a href="/#pricing">Pricing</a>
+        <a href="mailto:hello@devtoolskit.com">Contact</a>
+      </div>
+      <div>© 2025 DevTools Kit · All processing happens in your browser.</div>
+    </div>
+  </footer>
+
+  <!-- Toast -->
+  <div class="toast" id="dtk-toast"></div>
+
+  <!-- Scripts -->
+  <script src="/js/main.js"></script>
+  <script>
+    const TOOL_ID = 'json-formatter';
+
+    /* ---------- Init ---------- */
+    DTK.init(TOOL_ID);
+
+    /* ---------- Sample JSON ---------- */
+    const SAMPLE = {
+      "name": "DevTools Kit",
+      "version": "1.0.0",
+      "tools": [
+        { "id": "json-formatter", "free": true, "dailyLimit": 10 },
+        { "id": "csv-to-json",    "free": true, "dailyLimit": 10 }
+      ],
+      "meta": {
+        "author": "Your Name",
+        "license": "MIT",
+        "homepage": "https://devtoolskit.com"
+      }
+    };
+
+    function loadSample() {
+      document.getElementById('input-area').value = JSON.stringify(SAMPLE);
+      onInput();
+    }
+
+    function clearAll() {
+      document.getElementById('input-area').value = '';
+      document.getElementById('output-area').innerHTML = '';
+      setInputStatus('idle', 'Waiting for input…');
+      setOutputStatus('idle', 'Output will appear here');
+    }
+
+    async function pasteFromClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        document.getElementById('input-area').value = text;
+        onInput();
+      } catch {
+        DTK.toast('Could not read clipboard — paste manually.', true);
+      }
+    }
+
+    /* ---------- Live validation on input ---------- */
+    function onInput() {
+      const raw = document.getElementById('input-area').value.trim();
+      if (!raw) { setInputStatus('idle', 'Waiting for input…'); return; }
+      try {
+        JSON.parse(raw);
+        setInputStatus('ok', 'Valid JSON ✓');
+      } catch (e) {
+        setInputStatus('err', parseError(e));
+      }
+    }
+
+    /* ---------- Status helpers ---------- */
+    function setInputStatus(type, msg) {
+      const dot  = document.getElementById('status-dot');
+      const text = document.getElementById('status-text');
+      dot.className = 'status-dot' + (type === 'ok' ? ' ok' : type === 'err' ? ' err' : '');
+      text.textContent = msg;
+    }
+    function setOutputStatus(type, msg) {
+      const dot  = document.getElementById('out-dot');
+      const text = document.getElementById('out-status');
+      dot.className = 'status-dot' + (type === 'ok' ? ' ok' : type === 'err' ? ' err' : '');
+      text.textContent = msg;
+    }
+
+    /* ---------- Parse error → friendly message ---------- */
+    function parseError(e) {
+      const m = e.message.match(/position (\d+)/i);
+      if (m) return `Syntax error near position ${m[1]}: ${e.message.split(':').pop().trim()}`;
+      return 'Invalid JSON: ' + e.message;
+    }
+
+    /* ---------- Sort helper ---------- */
+    function sortObj(val, direction) {
+      if (Array.isArray(val)) return val.map(v => sortObj(v, direction));
+      if (val && typeof val === 'object') {
+        const keys = Object.keys(val).sort((a, b) =>
+          direction === 'desc' ? b.localeCompare(a) : a.localeCompare(b)
+        );
+        const out = {};
+        keys.forEach(k => { out[k] = sortObj(val[k], direction); });
+        return out;
+      }
+      return val;
+    }
+
+    /* ---------- Format ---------- */
+    function formatJSON() {
+      if (!DTK.tryUse(TOOL_ID)) return;
+
+      const raw = document.getElementById('input-area').value.trim();
+      if (!raw) { DTK.toast('Nothing to format!', true); return; }
+
+      try {
+        let parsed = JSON.parse(raw);
+        const sort = document.getElementById('sort-select').value;
+        if (sort !== 'none') parsed = sortObj(parsed, sort);
+
+        const indentVal = document.getElementById('indent-select').value;
+        const indent = indentVal === 'tab' ? '\t' : parseInt(indentVal);
+        const pretty = JSON.stringify(parsed, null, indent);
+
+        renderHighlighted(pretty);
+        setOutputStatus('ok', `Formatted · ${countStats(parsed)}`);
+        DTK.toast('Formatted!');
+      } catch (e) {
+        showError(parseError(e));
+      }
+    }
+
+    /* ---------- Minify ---------- */
+    function minifyJSON() {
+      if (!DTK.tryUse(TOOL_ID)) return;
+
+      const raw = document.getElementById('input-area').value.trim();
+      if (!raw) { DTK.toast('Nothing to minify!', true); return; }
+
+      try {
+        const parsed = JSON.parse(raw);
+        const minified = JSON.stringify(parsed);
+        document.getElementById('output-area').textContent = minified;
+        const saved = (((raw.length - minified.length) / raw.length) * 100).toFixed(1);
+        setOutputStatus('ok', `Minified · saved ${saved}% · ${minified.length} chars`);
+        DTK.toast('Minified!');
+      } catch (e) {
+        showError(parseError(e));
+      }
+    }
+
+    /* ---------- Validate only ---------- */
+    function validateOnly() {
+      const raw = document.getElementById('input-area').value.trim();
+      if (!raw) { DTK.toast('Nothing to validate!', true); return; }
+      try {
+        const parsed = JSON.parse(raw);
+        renderHighlighted(JSON.stringify(parsed, null, 2));
+        setOutputStatus('ok', 'Valid JSON ✓ · ' + countStats(parsed));
+        DTK.toast('Valid JSON ✓');
+      } catch (e) {
+        showError(parseError(e));
+        DTK.toast('Invalid JSON!', true);
+      }
+    }
+
+    /* ---------- Count stats ---------- */
+    function countStats(obj) {
+      let keys = 0, depth = 0;
+      function walk(v, d) {
+        if (d > depth) depth = d;
+        if (Array.isArray(v)) { v.forEach(i => walk(i, d + 1)); }
+        else if (v && typeof v === 'object') {
+          Object.entries(v).forEach(([, val]) => { keys++; walk(val, d + 1); });
+        }
+      }
+      walk(obj, 0);
+      return `${keys} keys · depth ${depth}`;
+    }
+
+    /* ---------- Syntax highlighting ---------- */
+    function renderHighlighted(json) {
+      const escaped = json
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      const highlighted = escaped.replace(
+        /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+        match => {
+          if (/^"/.test(match)) {
+            if (/:$/.test(match)) return `<span class="json-key">${match}</span>`;
+            return `<span class="json-str">${match}</span>`;
+          }
+          if (/true|false/.test(match)) return `<span class="json-bool">${match}</span>`;
+          if (/null/.test(match))        return `<span class="json-null">${match}</span>`;
+          return `<span class="json-num">${match}</span>`;
+        }
+      );
+      document.getElementById('output-area').innerHTML = highlighted;
+    }
+
+    /* ---------- Error display ---------- */
+    function showError(msg) {
+      document.getElementById('output-area').innerHTML =
+        `<div class="error-line">✕ ${msg}</div>`;
+      setOutputStatus('err', 'Error — check input');
+    }
+
+    /* ---------- Copy output ---------- */
+    function copyOutput() {
+      const text = document.getElementById('output-area').textContent;
+      if (!text) { DTK.toast('Nothing to copy!', true); return; }
+      DTK.copyText(text);
+    }
+
+    /* ---------- Download ---------- */
+    function downloadOutput() {
+      const text = document.getElementById('output-area').textContent;
+      if (!text) { DTK.toast('Nothing to download!', true); return; }
+      const blob = new Blob([text], { type: 'application/json' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = 'formatted.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      DTK.toast('Downloaded!');
+    }
+
+    /* ---------- Keyboard shortcut: Ctrl+Enter = format ---------- */
+    document.getElementById('input-area').addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        formatJSON();
+      }
+    });
+  </script>
+
+  <!-- Structured data for SEO -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "JSON Formatter & Validator",
+    "url": "https://devtoolskit.com/tools/json-formatter.html",
+    "description": "Free online JSON formatter, validator and minifier. Works entirely in your browser.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+
+</body>
+</html>
