@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Word Counter — Count Words, Characters & Reading Time | DevTools Kit</title>
+  <meta name="description" content="Free online word counter. Count words, characters, sentences, paragraphs, and estimate reading time. Supports multiple languages. No signup needed." />
+  <meta name="keywords" content="word counter, character counter, word count tool, online word counter, count words online" />
+  <link rel="canonical" href="https://devtoolskit.com/tools/word-counter.html" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2300e5a0'/><text x='6' y='23' font-size='20' font-family='monospace' fill='%230a0a0f'>⚙</text></svg>" />
+  <style>
+    .stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    @media(max-width:500px){ .stat-grid{grid-template-columns:repeat(2,1fr);} }
+    .stat-card { background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:16px; text-align:center; }
+    .stat-card-num { font-family:var(--font-head); font-size:28px; font-weight:800; color:var(--accent); }
+    .stat-card-label { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim); margin-top:4px; }
+    .freq-item { display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid var(--border); font-size:13px; }
+    .freq-item:last-child { border-bottom:none; }
+    .freq-word { color:var(--accent); font-weight:700; min-width:100px; }
+    .freq-bar-bg { flex:1; height:4px; background:var(--bg3); border-radius:4px; overflow:hidden; }
+    .freq-bar-fill { height:100%; background:var(--accent2); border-radius:4px; }
+    .freq-count { color:var(--text-faint); min-width:30px; text-align:right; }
+    .wc-textarea { min-height:340px; }
+    .highlight-toggle { display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; }
+    .highlight-toggle input { accent-color:var(--accent); }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="/"><span>DevTools</span>Kit<span class="logo-badge">FREE</span></a>
+    <div class="nav-links">
+      <a href="/blog/" class="hide-mobile">Blog</a>
+      <a href="/#tools" class="hide-mobile">All Tools</a>
+      <a href="/#pricing" class="btn-upgrade">✦ Go Pro</a>
+    </div>
+  </div>
+</nav>
+
+<div class="tool-page">
+  <div class="container">
+    <div class="breadcrumb"><a href="/">Home</a><span>›</span><a href="/#tools">Tools</a><span>›</span>Word Counter</div>
+    <div class="tool-page-header">
+      <h1 class="tool-page-title">≡ Word Counter</h1>
+      <p class="tool-page-subtitle">Live word, character, sentence, and paragraph counts with reading time estimate.</p>
+    </div>
+
+    <div class="tool-workspace">
+      <div class="tool-main">
+
+        <!-- Stats grid -->
+        <div class="stat-grid" id="stats-grid">
+          <div class="stat-card"><div class="stat-card-num" id="s-words">0</div><div class="stat-card-label">Words</div></div>
+          <div class="stat-card"><div class="stat-card-num" id="s-chars">0</div><div class="stat-card-label">Characters</div></div>
+          <div class="stat-card"><div class="stat-card-num" id="s-chars-no">0</div><div class="stat-card-label">Chars (no spaces)</div></div>
+          <div class="stat-card"><div class="stat-card-num" id="s-sentences">0</div><div class="stat-card-label">Sentences</div></div>
+          <div class="stat-card"><div class="stat-card-num" id="s-paragraphs">0</div><div class="stat-card-label">Paragraphs</div></div>
+          <div class="stat-card"><div class="stat-card-num" id="s-reading">0s</div><div class="stat-card-label">Reading Time</div></div>
+        </div>
+
+        <!-- Input area -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Input Text</span>
+            <div class="panel-actions">
+              <button class="panel-btn" onclick="document.getElementById('wc-input').value='';updateStats()">Clear</button>
+              <button class="panel-btn" onclick="DTK.copyText(document.getElementById('wc-input').value)">Copy</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <textarea id="wc-input" class="code-area wc-textarea"
+              placeholder="Paste or type your text here — stats update as you type…"
+              oninput="updateStats()"></textarea>
+          </div>
+          <div class="status-bar" style="justify-content:space-between">
+            <span id="wc-live" style="color:var(--text-dim);font-size:12px">0 words · 0 characters</span>
+            <div class="option-group">
+              <label class="option-label" for="wpm-input">WPM</label>
+              <input type="number" id="wpm-input" value="200" min="50" max="1000" style="width:70px" oninput="updateStats()" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Target word count -->
+        <div class="panel">
+          <div class="options-bar">
+            <div class="option-group">
+              <label class="option-label">Target word count</label>
+              <input type="number" id="target-input" min="0" value="0" style="width:90px" placeholder="0 = off" oninput="updateTarget()" />
+            </div>
+            <span id="target-status" style="font-size:13px;color:var(--text-dim)"></span>
+          </div>
+        </div>
+
+        <!-- Top words -->
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Top 10 Words</span>
+            <div class="panel-actions"><button class="panel-btn" onclick="buildFrequency()">Refresh</button></div>
+          </div>
+          <div class="panel-body" style="padding:8px 16px" id="freq-list">
+            <div style="color:var(--text-faint);font-size:13px;padding:8px 0">Type something to see word frequency…</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sidebar -->
+      <div class="tool-sidebar">
+        <div class="usage-widget" style="border-color:var(--accent)">
+          <div class="usage-title">Plan</div>
+          <div style="color:var(--accent);font-family:var(--font-head);font-size:16px;font-weight:800;margin-top:4px">✦ Unlimited Free</div>
+          <div style="font-size:12px;color:var(--text-dim);margin-top:8px">Word Counter has no daily limit.</div>
+        </div>
+        <div class="ad-slot"><div class="ad-slot-label">Advertisement</div><div style="color:var(--text-faint);font-size:12px">AdSense 250×250</div></div>
+        <div class="related-tools">
+          <div class="related-title">Related Tools</div>
+          <a class="related-item" href="/tools/json-formatter.html"><span class="related-icon">{ }</span> JSON Formatter</a>
+          <a class="related-item" href="/tools/base64-encoder.html"><span class="related-icon">64</span> Base64 Encoder</a>
+          <a class="related-item" href="/tools/url-encoder.html"><span class="related-icon">%</span> URL Encoder</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-links"><a href="/">Home</a><a href="/#tools">All Tools</a><a href="/blog/">Blog</a><a href="/#pricing">Pricing</a></div>
+    <div>© 2025 DevTools Kit · All processing happens in your browser.</div>
+  </div>
+</footer>
+<div class="toast" id="dtk-toast"></div>
+<script src="/js/main.js"></script>
+<script>
+const STOP_WORDS = new Set(['the','a','an','and','or','but','in','on','at','to','for','of','with','by','from','is','was','are','were','be','been','being','have','has','had','do','does','did','will','would','could','should','may','might','shall','can','that','this','these','those','i','you','he','she','it','we','they','me','him','her','us','them','my','your','his','its','our','their','not','no','so','if','as','up','out','about','into','through','during','before','after','above','below','between','each','both','few','more','most','other','some','such','than','too','very','just','also','only','even','here','there','when','where','how','all','any','which','who','what']);
+
+function updateStats() {
+  const text = document.getElementById('wc-input').value;
+  const wpm  = parseInt(document.getElementById('wpm-input').value) || 200;
+
+  const words      = text.trim() ? text.trim().split(/\s+/).filter(w=>w.length>0) : [];
+  const chars      = text.length;
+  const charsNo    = text.replace(/\s/g,'').length;
+  const sentences  = text.split(/[.!?]+/).filter(s=>s.trim().length>0).length;
+  const paragraphs = text.split(/\n\s*\n/).filter(p=>p.trim().length>0).length || (text.trim().length?1:0);
+  const wordCount  = words.length;
+  const seconds    = Math.ceil((wordCount/wpm)*60);
+  const readTime   = seconds<60 ? seconds+'s' : Math.ceil(seconds/60)+'m';
+
+  document.getElementById('s-words').textContent      = wordCount.toLocaleString();
+  document.getElementById('s-chars').textContent      = chars.toLocaleString();
+  document.getElementById('s-chars-no').textContent   = charsNo.toLocaleString();
+  document.getElementById('s-sentences').textContent  = sentences.toLocaleString();
+  document.getElementById('s-paragraphs').textContent = paragraphs.toLocaleString();
+  document.getElementById('s-reading').textContent    = readTime;
+  document.getElementById('wc-live').textContent      = `${wordCount.toLocaleString()} words · ${chars.toLocaleString()} characters`;
+
+  updateTarget();
+  if(wordCount>0) buildFrequency();
+  else document.getElementById('freq-list').innerHTML='<div style="color:var(--text-faint);font-size:13px;padding:8px 0">Type something to see word frequency…</div>';
+}
+
+function updateTarget() {
+  const target = parseInt(document.getElementById('target-input').value);
+  const current = parseInt(document.getElementById('s-words').textContent.replace(/,/g,''))||0;
+  const el = document.getElementById('target-status');
+  if(!target){el.textContent='';return;}
+  const diff = target-current;
+  if(diff>0) el.textContent=`${diff} words to go`;
+  else if(diff===0) el.textContent='✓ Target reached!';
+  else el.textContent=`${Math.abs(diff)} words over target`;
+  el.style.color=diff<=0?'var(--accent)':'var(--text-dim)';
+}
+
+function buildFrequency() {
+  const text = document.getElementById('wc-input').value.toLowerCase();
+  const words = text.match(/[a-z']+/g)||[];
+  const freq = {};
+  words.forEach(w=>{ if(w.length>2&&!STOP_WORDS.has(w)) freq[w]=(freq[w]||0)+1; });
+  const sorted = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  if(!sorted.length){document.getElementById('freq-list').innerHTML='<div style="color:var(--text-faint);font-size:13px;padding:8px 0">No significant words found.</div>';return;}
+  const max=sorted[0][1];
+  const html=sorted.map(([w,c])=>`
+    <div class="freq-item">
+      <span class="freq-word">${w}</span>
+      <div class="freq-bar-bg"><div class="freq-bar-fill" style="width:${(c/max*100).toFixed(0)}%"></div></div>
+      <span class="freq-count">${c}</span>
+    </div>`).join('');
+  document.getElementById('freq-list').innerHTML=html;
+}
+</script>
+</body>
+</html>
