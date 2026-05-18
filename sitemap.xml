@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://devtools-kit-eight.vercel.app/</loc><priority>1.0</priority></url>
+  <url><loc>https://devtools-kit-eight.vercel.app/tools/json-formatter.html</loc><priority>0.9</priority></url>
+  <url><loc>https://devtools-kit-eight.vercel.app/tools/csv-to-json.html</loc><priority>0.9</priority></url>
+  <url><loc>https://devtools-kit-eight.vercel.app/tools/password-generator.html</loc><priority>0.9</priority></url>
+  <url><loc>https://devtools-kit-eight.vercel.app/tools/qr-generator.html</loc><priority>0.9</priority></url>
+  <url><loc>https://devtools-kit-eight.vercel.app/tools/word-counter.html</loc><priority>0.9</priority></url>
+  <url><loc>https://devtools-kit-eight.vercel.app/tools/color-converter.html</loc><priority>0.9</priority></url>
+  <url><loc>https://devtools-kit-eight.vercel.app/tools/base64-encoder.html</loc><priority>0.9</priority></url>
+  <url><loc>https://devtools-kit-eight.vercel.app/tools/url-encoder.html</loc><priority>0.9</priority></url>
+</urlset>
