@@ -6,7 +6,7 @@
 const DTK = (() => {
   /* ---------- Config ---------- */
   const DAILY_LIMIT   = 10;               // free uses per tool per day
-  const STRIPE_LINK   = 'https://buy.stripe.com/YOUR_PAYMENT_LINK'; // ← replace
+  const STRIPE_LINK = 'https://buy.stripe.com/4gM28q4RW7dx3ho5TJc3m00';
 
   /* ---------- Storage helpers ---------- */
   function getUsage(toolId) {
